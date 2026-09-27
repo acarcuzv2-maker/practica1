@@ -38,23 +38,30 @@
             position:relative
 
         }
-
-    
         
         span, 
         input {
             position:absolute;
             inset: 0;
             vertical-align: middle;
+            display: inline-flex;
             justify-content: center;
             align-items: center;
-            ;
+            
         }
         input {
             border: 0;
             opacity: 0; 
             pointer-events: none;
             width: 100%;
+            border-radius: 2px;
+
+            &:focus{
+                opacity: 1;
+                outline: 2px solid rgb(72, 179, 251);
+
+            }
+           
 
         }
 
@@ -67,6 +74,7 @@
     <script type = "module">
     const $ = el => document.querySelector(el)
     const $$ = el => document.querySelectorAll(el)
+
     const $table = $('table')
     const $head = $('thead')
     const $body = $('tbody')
@@ -108,11 +116,19 @@
         $body.innerHTML = bodyHTML
     }
 
-    $body.addEventListener('click', event=>{
+
+
+    $body.addEventListener('click', event=> {
     const td= event.target.closest ('td')
     if (!td) return
 
-    console.log(td)
+    const { x, y } = td.dataset
+    const input= td.querySelector('input')
+    const span= td.querySelector('span')
+
+    const end= input.value.length
+    input.setSelectionRange(end, end,)
+    input.focus()
     })
     
     renderSpreadSheet()
