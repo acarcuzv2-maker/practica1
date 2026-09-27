@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Excel.js</title>
-    <link  rel="diseñosheet" href="diseño.css"> 
+    <link  rel="stylesheet" href="estilo.css"> 
     <style>
         body {
             font-family:system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
@@ -32,12 +32,24 @@
             font-weight: normal;;
             font-size: 12px;
             text-align: center;
-            width: 64px;
+            width: 65px;
             height: 20px;
             vertical-align: middle;
+            position:relative
 
         }
 
+    
+        
+        span, 
+        input {
+            position:absolute;
+            inset: 0;
+            vertical-align: middle;
+            justify-content: center;
+            align-items: center;
+            ;
+        }
         input {
             border: 0;
             opacity: 0; 
@@ -55,20 +67,26 @@
     <script type = "module">
     const $ = el => document.querySelector(el)
     const $$ = el => document.querySelectorAll(el)
+    const $table = $('table')
+    const $head = $('thead')
+    const $body = $('tbody')
 
     const COLUMNAS = 10
     const FILAS = 15
+    const FIRST_CHAR_CODE=65
 
+    
     const range = length => Array.from({length } , (_, i) => i)
-
+    const obtenerColumna= i => String.fromCharCode(FIRST_CHAR_CODE + i)
+    
+    let STATE = range (COLUMNAS)
+    .map(i=> range(FILAS).map(j=>({ computedValue: j, value: j})))
+    console.log(STATE)
+    
     const renderSpreadSheet = () => {
-        const $table = $('table')
-        const $head = $('thead')
-        const $body = $('tbody')
-
         const headerHTML = `<tr>
                 <th></th>
-                ${range(COLUMNAS).map(i => `<th>${i}</th>`).join('')}
+                ${range(COLUMNAS).map(i => `<th>${obtenerColumna(i)}</th>`).join('')}
             </tr>`
 
         $head.innerHTML = headerHTML    
@@ -78,8 +96,8 @@
             <td>${fila + 1 }</td>
             ${range(COLUMNAS).map(columna => `
             <td data-x="${columna}" data-y="${fila}">
-                <span></span>
-                <input type= "text" value=""/>
+                <span>${STATE[columna][fila].computedValue}</span>
+                <input type= "text" value="${STATE[columna][fila].value}"/>
             </td>    
             `).join('')}
    
@@ -90,6 +108,13 @@
         $body.innerHTML = bodyHTML
     }
 
+    $body.addEventListener('click', event=>{
+    const td= event.target.closest ('td')
+    if (!td) return
+
+    console.log(td)
+    })
+    
     renderSpreadSheet()
     </script>
 
@@ -100,7 +125,7 @@
 
     <h1>Hoja de Cálculo</h1>
 
-    <table>
+    <table style="margin: 0 auto; width: 90%;">
         <thead></thead>
 
         <tbody></tbody>
