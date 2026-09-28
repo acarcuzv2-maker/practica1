@@ -87,9 +87,41 @@
     const range = length => Array.from({length } , (_, i) => i)
     const obtenerColumna= i => String.fromCharCode(FIRST_CHAR_CODE + i)
     
-    let STATE = range (COLUMNAS)
-    .map(i=> range(FILAS).map(j=>({ computedValue: j, value: j})))
+    let STATE = range(COLUMNAS)
+    .map(i=> range(FILAS).map(j=>({ computedValue: 0, value: 0 })))
+    
     console.log(STATE)
+
+    function updateCell({ x, y, value }){
+        const newState= structuredClone(STATE)
+
+        const cell = newState[x][y]
+
+        cell.computedValue = computeValue(value)      
+        cell.value = value
+
+        newState[x][y] = cell
+        STATE = newState
+
+        renderSpreadSheet()
+    }
+
+    function computeValue(value){
+        if (!value.startsWith('='))return value
+
+        const formula=value.substring(1)
+
+        let computedValue
+        try {
+            computedValue=eval(formula)
+
+        }catch(e){
+            computedValue = '!ERROR:  ${e.message}'
+
+
+        }
+        return computedValue
+    }
     
     const renderSpreadSheet = () => {
         const headerHTML = `<tr>
@@ -127,8 +159,20 @@
     const span= td.querySelector('span')
 
     const end= input.value.length
-    input.setSelectionRange(end, end,)
+    input.setSelectionRange(end, end)
     input.focus()
+
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter')input.blur()
+    })
+
+    input.addEventListener('blur', () => {
+        console.log({ value: input.value, state: STATE[x][y].value })
+    
+        if (input.value === STATE [x][y].value) return
+
+    updateCell({ x, y, value: input.value })
+    }, { once: true })
     })
     
     renderSpreadSheet()
