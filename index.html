@@ -103,6 +103,9 @@
         cell.value = value
 
         newState[x][y] = cell
+
+        computeAllCells(newState,generateCellsContants(newState))
+
         STATE = newState
 
         renderSpreadSheet()
@@ -119,7 +122,17 @@
         }).join('\n')
     }
 
+    function computeAllCells(cells, constants){
+        cells.forEach((filas, x)=>{
+            filas.forEach((cell, y) =>{
+                const computedValue=computeValue(cell.value, constants)
+                cell.computedValue= computedValue
+            })
+        })
+    }
+
     function computeValue(value, constants){
+        if (typeof value === 'number')return value
         if (!value.startsWith('='))return value
 
         const formula=value.slice(1)
