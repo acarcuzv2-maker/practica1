@@ -95,9 +95,11 @@
     function updateCell({ x, y, value }){
         const newState= structuredClone(STATE)
 
+        const constants= generateCellsContants(newState)
+
         const cell = newState[x][y]
 
-        cell.computedValue = computeValue(value)      
+        cell.computedValue = computeValue(value, constants)      
         cell.value = value
 
         newState[x][y] = cell
@@ -106,14 +108,29 @@
         renderSpreadSheet()
     }
 
-    function computeValue(value){
+    function generateCellsContants (cells){
+        return cells.map((filas, x)=>{
+            return filas.map((cell, y)=>{
+                const letra = obtenerColumna(x)
+                const cellId= `${letra}${y + 1}`
+                return `const ${cellId} = ${cell.computedValue};`
+
+            }).join('\n')
+        }).join('\n')
+    }
+
+    function computeValue(value, constants){
         if (!value.startsWith('='))return value
 
-        const formula=value.substring(1)
+        const formula=value.slice(1)
 
         let computedValue
         try {
-            computedValue=eval(formula)
+            computedValue=eval(`(( )=> {
+            ${constants}
+            return ${formula};
+
+            })()`)
 
         }catch(e){
             computedValue = '!ERROR:  ${e.message}'
