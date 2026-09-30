@@ -58,7 +58,7 @@ let REHACER = []
 function registrarCambio() {
     DESHACER.push(STATE)
     if (DESHACER.length > MAX_HISTORIAL) DESHACER.shift()
-    REHACER = []   // un cambio nuevo borra lo que se podía rehacer
+    REHACER = [] 
 }
 
 function deshacer() {
@@ -77,7 +77,7 @@ function rehacer() {
      renderSpreadSheet()
 }
 
-function actualizarBotonesHistorial() {
+function actualizarbotoness() {
      $('#btn-deshacer').disabled = DESHACER.length === 0
     $('#btn-rehacer').disabled = REHACER.length === 0
 }
@@ -129,22 +129,64 @@ function generateCellsContants (cells){
 
         }).join('\n')
     }).join('\n')
- }
+}
 
+function obtenerDependencias(value) {
+    if (typeof value !== 'string' || !value.startsWith('=')) return []
+    const formula = expandRanges(value.slice(1).toUpperCase())
+    return formula.match(/[A-Z]+\d+/g) || []
+}
+
+function construirGrafo(cells) {
+    const grafo = {}
+    cells.forEach((filas, x) => {
+        filas.forEach((cell, y) => {
+            const id = `${obtenerColumna(x)}${y + 1}`
+            grafo[id] = obtenerDependencias(cell.value)
+        })
+    })
+    return grafo
+}
+
+function celdasCirculares(grafo) {
+    const circulares = new Set()
+
+    for (const inicio in grafo) {
+        const visitados = new Set()
+        const pila = [...grafo[inicio]]
+
+        while (pila.length) {
+            const actual = pila.pop()
+            if (actual === inicio) {       // volvimos al punto de partida: hay ciclo
+                circulares.add(inicio)
+                break
+            }
+            if (visitados.has(actual) || !(actual in grafo)) continue
+            visitados.add(actual)
+            pila.push(...grafo[actual])
+        }
+    }
+    return circulares
+}
 function computeAllCells(cells) {
+    const circulares = celdasCirculares(construirGrafo(cells))
     const maxPasadas = FILAS * COLUMNAS
     let cambio = true
     let pasadas = 0
 
     while (cambio && pasadas < maxPasadas) {
-         cambio = false
+        cambio = false
         pasadas++
 
         const constants = generateCellsContants(cells)
 
         cells.forEach((filas, x) => {
-           filas.forEach((cell, y) => {
-                const nuevo = computeValue(cell.value, constants)
+            filas.forEach((cell, y) => {
+                const id = `${obtenerColumna(x)}${y + 1}`
+                const nuevo = circulares.has(id)
+                    ? '#CIRCULAR!'
+                    : computeValue(cell.value, constants)
+
                 if (nuevo !== cell.computedValue) {
                     cell.computedValue = nuevo
                     cambio = true
@@ -169,8 +211,7 @@ function expandRanges(formula) {
     })
 }
 
-const ERRORES = ['#DIV/0!', '#FORMULA!', '#NOMBRE?', '#REF!']
-
+const ERRORES = ['#DIV/0!', '#FORMULA!', '#NOMBRE?', '#REF!', '#CIRCULAR!']
 function computeValue(value, constants){
     if (typeof value === 'number') return value
     if (!value.startsWith('=')) {
@@ -237,7 +278,7 @@ const renderSpreadSheet = () => {
         }).join('')
 
     $body.innerHTML = bodyHTML
-    actualizarBotonesHistorial()
+    actualizarbotoness()
 }
 
 $body.addEventListener('click', event=> {
